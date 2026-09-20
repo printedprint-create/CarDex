@@ -44,6 +44,17 @@ jobs:
       - name: Build AAB
         working-directory: android
         run: ./gradlew bundleRelease
+        
+      - name: Generar APK
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardex-apk
+          path: android/app/build/outputs/apk/debug/*.apk
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
