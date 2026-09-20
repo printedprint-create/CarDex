@@ -77,7 +77,11 @@ jobs:
         run: npx cap sync android
 
       - name: Instalar ImageMagick
-        run: sudo apt-get update && sudo apt-get install -y imagemagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+          which convert
+          convert --version
 
       - name: Comprobar logo
         run: |
@@ -85,7 +89,9 @@ jobs:
             echo "ERROR: No se encuentra cardex-logo.png"
             exit 1
           fi
+
           echo "Logo encontrado correctamente."
+          file cardex-logo.png
 
       - name: Generar iconos Cardex
         run: |
@@ -99,42 +105,25 @@ jobs:
 
           rm -rf "$RES/mipmap-anydpi-v26"
 
-          magick cardex-logo.png -resize 48x48 "$RES/mipmap-mdpi/ic_launcher.png"
-          magick cardex-logo.png -resize 72x72 "$RES/mipmap-hdpi/ic_launcher.png"
-          magick cardex-logo.png -resize 96x96 "$RES/mipmap-xhdpi/ic_launcher.png"
-          magick cardex-logo.png -resize 144x144 "$RES/mipmap-xxhdpi/ic_launcher.png"
-          magick cardex-logo.png -resize 192x192 "$RES/mipmap-xxxhdpi/ic_launcher.png"
+          convert cardex-logo.png -resize 48x48 \
+            "$RES/mipmap-mdpi/ic_launcher.png"
 
-          cp "$RES/mipmap-mdpi/ic_launcher.png" "$RES/mipmap-mdpi/ic_launcher_round.png"
-          cp "$RES/mipmap-hdpi/ic_launcher.png" "$RES/mipmap-hdpi/ic_launcher_round.png"
-          cp "$RES/mipmap-xhdpi/ic_launcher.png" "$RES/mipmap-xhdpi/ic_launcher_round.png"
-          cp "$RES/mipmap-xxhdpi/ic_launcher.png" "$RES/mipmap-xxhdpi/ic_launcher_round.png"
-          cp "$RES/mipmap-xxxhdpi/ic_launcher.png" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
+          convert cardex-logo.png -resize 72x72 \
+            "$RES/mipmap-hdpi/ic_launcher.png"
 
-          echo "Iconos de Cardex creados."
+          convert cardex-logo.png -resize 96x96 \
+            "$RES/mipmap-xhdpi/ic_launcher.png"
 
-      - name: Preparar Gradle
-        run: |
-          cd android
-          chmod +x gradlew
+          convert cardex-logo.png -resize 144x144 \
+            "$RES/mipmap-xxhdpi/ic_launcher.png"
 
-      - name: Generar APK de prueba
-        run: |
-          cd android
-          ./gradlew --no-daemon assembleDebug
+          convert cardex-logo.png -resize 192x192 \
+            "$RES/mipmap-xxxhdpi/ic_launcher.png"
 
-      - name: Generar AAB
-        run: |
-          cd android
-          ./gradlew --no-daemon bundleRelease
+          cp "$RES/mipmap-mdpi/ic_launcher.png" \
+             "$RES/mipmap-mdpi/ic_launcher_round.png"
 
-      - name: Guardar APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: cardex-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          cp "$RES/mipmap-hdpi/ic_launcher.png" \
+             "$RES/mipmap-hdpi/ic_launcher_round.png"
 
-      - name: Guardar AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: cardex-aab
+          cp "$RES/m
