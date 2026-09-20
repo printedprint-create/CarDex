@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Instalar dependencias
         run: npm install
@@ -31,99 +31,8 @@ jobs:
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools'
+          packages: "platform-tools"
 
       - name: Instalar Android SDK requerido
         run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-          yes | sdkmanager --licenses || true
-
-      - name: Crear web mínima
-        run: |
-          mkdir -p www
-          printf '%s\n' \
-            '<!doctype html>' \
-            '<html lang="es">' \
-            '<head>' \
-            '<meta charset="UTF-8">' \
-            '<meta name="viewport" content="width=device-width, initial-scale=1.0">' \
-            '<title>Cardex</title>' \
-            '</head>' \
-            '<body></body>' \
-            '</html>' > www/index.html
-
-      - name: Crear configuración Capacitor
-        run: |
-          cat > capacitor.config.ts <<'EOF'
-          import type { CapacitorConfig } from '@capacitor/cli';
-
-          const config: CapacitorConfig = {
-            appId: 'com.cardex.photo',
-            appName: 'Cardex',
-            webDir: 'www',
-            server: {
-              url: 'https://cardex-photo.lovable.app',
-              cleartext: false
-            }
-          };
-
-          export default config;
-          EOF
-
-      - name: Crear proyecto Android
-        run: npx cap add android
-
-      - name: Sincronizar Capacitor
-        run: npx cap sync android
-
-      - name: Instalar ImageMagick
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-          which convert
-          convert --version
-
-      - name: Comprobar logo
-        run: |
-          if [ ! -f "cardex-logo.png" ]; then
-            echo "ERROR: No se encuentra cardex-logo.png"
-            exit 1
-          fi
-
-          echo "Logo encontrado correctamente."
-          file cardex-logo.png
-
-      - name: Generar iconos Cardex
-        run: |
-          RES="android/app/src/main/res"
-
-          mkdir -p "$RES/mipmap-mdpi"
-          mkdir -p "$RES/mipmap-hdpi"
-          mkdir -p "$RES/mipmap-xhdpi"
-          mkdir -p "$RES/mipmap-xxhdpi"
-          mkdir -p "$RES/mipmap-xxxhdpi"
-
-          rm -rf "$RES/mipmap-anydpi-v26"
-
-          convert cardex-logo.png -resize 48x48 \
-            "$RES/mipmap-mdpi/ic_launcher.png"
-
-          convert cardex-logo.png -resize 72x72 \
-            "$RES/mipmap-hdpi/ic_launcher.png"
-
-          convert cardex-logo.png -resize 96x96 \
-            "$RES/mipmap-xhdpi/ic_launcher.png"
-
-          convert cardex-logo.png -resize 144x144 \
-            "$RES/mipmap-xxhdpi/ic_launcher.png"
-
-          convert cardex-logo.png -resize 192x192 \
-            "$RES/mipmap-xxxhdpi/ic_launcher.png"
-
-          cp "$RES/mipmap-mdpi/ic_launcher.png" \
-             "$RES/mipmap-mdpi/ic_launcher_round.png"
-
-          cp "$RES/mipmap-hdpi/ic_launcher.png" \
-             "$RES/mipmap-hdpi/ic_launcher_round.png"
-
-          cp "$RES/m
+          sdkmanager "platform-tools" "platforms;android-35" "build
