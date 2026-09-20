@@ -20,19 +20,91 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: '21'
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias del proyecto
         run: npm install
 
       - name: Instalar Capacitor
-        run: npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+        run: |
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: "platform-tools"
+          packages: 'platform-tools'
 
       - name: Instalar Android SDK requerido
         run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          yes | sdkmanager --licenses || true
+
+      - name: Crear web mínima para Capacitor
+        run: |
+          mkdir -p www
+
+          cat > www/index.html <<'EOF'
+          <!doctype html>
+          <html lang="es">
+            <head>
+              <meta charset="UTF-8">
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0"
+              >
+              <title>Cardex</title>
+            </head>
+            <body></body>
+          </html>
+          EOF
+
+      - name: Crear configuración de Capacitor
+        run: |
+          cat > capacitor.config.ts <<'EOF'
+          import type { CapacitorConfig } from '@capacitor/cli';
+
+          const config: CapacitorConfig = {
+            appId: 'com.cardex.photo',
+            appName: 'Cardex',
+            webDir: 'www',
+            server: {
+              url: 'https://cardex-photo.lovable.app',
+              cleartext: true
+            }
+          };
+
+          export default config;
+          EOF
+
+      - name: Crear proyecto Android
+        run: npx cap add android
+
+      - name: Sincronizar Capacitor
+        run: npx cap sync android
+
+      - name: Preparar Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+
+      - name: Generar APK de prueba
+        run: |
+          cd android
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Generar AAB
+        run: |
+          cd android
+          ./gradlew --no-daemon bundleRelease
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardex-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+
+      - name: Guardar AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardex-aab
+          path: android/app/build/outputs/bundle/release/*.aab
