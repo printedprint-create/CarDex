@@ -82,27 +82,25 @@ jobs:
       - name: Sincronizar Capacitor
         run: npx cap sync android
 
-      # ---------------------------------------------------------
-      # ICONO DE CARDEX
-      # ---------------------------------------------------------
-
       - name: Instalar ImageMagick
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Generar iconos Android de Cardex
+      - name: Generar iconos de Cardex
         run: |
           set -e
 
-          ICON="src/assets/cardex-logo.png"
+          ICON="cardex-logo.png"
 
           if [ ! -f "$ICON" ]; then
-            echo "ERROR: No existe $ICON"
+            echo "ERROR: No existe $ICON en la raíz del repositorio."
+            echo "Archivos disponibles:"
+            ls -la
             exit 1
           fi
 
-          echo "Icono encontrado: $ICON"
+          echo "Logo encontrado: $ICON"
 
           RES="android/app/src/main/res"
 
@@ -110,89 +108,4 @@ jobs:
           mkdir -p "$RES/mipmap-hdpi"
           mkdir -p "$RES/mipmap-xhdpi"
           mkdir -p "$RES/mipmap-xxhdpi"
-          mkdir -p "$RES/mipmap-xxxhdpi"
-
-          # Eliminar iconos adaptativos predeterminados de Capacitor
-          rm -rf "$RES/mipmap-anydpi-v26"
-          rm -rf "$RES/mipmap-anydpi"
-
-          # Generar iconos principales
-          magick "$ICON" -resize 48x48 \
-            "$RES/mipmap-mdpi/ic_launcher.png"
-
-          magick "$ICON" -resize 72x72 \
-            "$RES/mipmap-hdpi/ic_launcher.png"
-
-          magick "$ICON" -resize 96x96 \
-            "$RES/mipmap-xhdpi/ic_launcher.png"
-
-          magick "$ICON" -resize 144x144 \
-            "$RES/mipmap-xxhdpi/ic_launcher.png"
-
-          magick "$ICON" -resize 192x192 \
-            "$RES/mipmap-xxxhdpi/ic_launcher.png"
-
-          # Generar también el icono redondo
-          magick "$ICON" -resize 48x48 \
-            "$RES/mipmap-mdpi/ic_launcher_round.png"
-
-          magick "$ICON" -resize 72x72 \
-            "$RES/mipmap-hdpi/ic_launcher_round.png"
-
-          magick "$ICON" -resize 96x96 \
-            "$RES/mipmap-xhdpi/ic_launcher_round.png"
-
-          magick "$ICON" -resize 144x144 \
-            "$RES/mipmap-xxhdpi/ic_launcher_round.png"
-
-          magick "$ICON" -resize 192x192 \
-            "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
-
-          echo "Iconos de Cardex generados correctamente."
-
-      # ---------------------------------------------------------
-      # PREPARAR GRADLE
-      # ---------------------------------------------------------
-
-      - name: Preparar Gradle
-        run: |
-          cd android
-          chmod +x gradlew
-
-      # ---------------------------------------------------------
-      # APK DE PRUEBA
-      # ---------------------------------------------------------
-
-      - name: Generar APK de prueba
-        run: |
-          cd android
-          ./gradlew --no-daemon assembleDebug
-
-      # ---------------------------------------------------------
-      # AAB PARA GOOGLE PLAY
-      # ---------------------------------------------------------
-
-      - name: Generar AAB
-        run: |
-          cd android
-          ./gradlew --no-daemon bundleRelease
-
-      # ---------------------------------------------------------
-      # GUARDAR APK
-      # ---------------------------------------------------------
-
-      - name: Guardar APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: cardex-apk
-          path: android/app/build/outputs/apk/debug/*.apk
-
-      # ---------------------------------------------------------
-      # GUARDAR AAB
-      # ---------------------------------------------------------
-
-      - name: Guardar AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: cardex-aab
-          path: android/app/build/outputs/bundle/release/*.aab
+          mkdir -p "$RES/mipmap-
