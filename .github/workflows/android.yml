@@ -22,12 +22,11 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Instalar dependencias del proyecto
+      - name: Instalar dependencias
         run: npm install
 
       - name: Instalar Capacitor
-        run: |
-          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+        run: npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v4
@@ -39,26 +38,21 @@ jobs:
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
           yes | sdkmanager --licenses || true
 
-      - name: Crear web mínima para Capacitor
+      - name: Crear web mínima
         run: |
           mkdir -p www
+          printf '%s\n' \
+            '<!doctype html>' \
+            '<html lang="es">' \
+            '<head>' \
+            '<meta charset="UTF-8">' \
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">' \
+            '<title>Cardex</title>' \
+            '</head>' \
+            '<body></body>' \
+            '</html>' > www/index.html
 
-          cat > www/index.html <<'EOF'
-          <!doctype html>
-          <html lang="es">
-            <head>
-              <meta charset="UTF-8">
-              <meta
-                name="viewport"
-                content="width=device-width, initial-scale=1.0"
-              >
-              <title>Cardex</title>
-            </head>
-            <body></body>
-          </html>
-          EOF
-
-      - name: Crear configuración de Capacitor
+      - name: Crear configuración Capacitor
         run: |
           cat > capacitor.config.ts <<'EOF'
           import type { CapacitorConfig } from '@capacitor/cli';
@@ -83,29 +77,64 @@ jobs:
         run: npx cap sync android
 
       - name: Instalar ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Comprobar logo
         run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-
-      - name: Generar iconos de Cardex
-        run: |
-          set -e
-
-          ICON="cardex-logo.png"
-
-          if [ ! -f "$ICON" ]; then
-            echo "ERROR: No existe $ICON en la raíz del repositorio."
-            echo "Archivos disponibles:"
-            ls -la
+          if [ ! -f "cardex-logo.png" ]; then
+            echo "ERROR: No se encuentra cardex-logo.png"
             exit 1
           fi
+          echo "Logo encontrado correctamente."
 
-          echo "Logo encontrado: $ICON"
-
+      - name: Generar iconos Cardex
+        run: |
           RES="android/app/src/main/res"
 
           mkdir -p "$RES/mipmap-mdpi"
           mkdir -p "$RES/mipmap-hdpi"
           mkdir -p "$RES/mipmap-xhdpi"
           mkdir -p "$RES/mipmap-xxhdpi"
-          mkdir -p "$RES/mipmap-
+          mkdir -p "$RES/mipmap-xxxhdpi"
+
+          rm -rf "$RES/mipmap-anydpi-v26"
+
+          magick cardex-logo.png -resize 48x48 "$RES/mipmap-mdpi/ic_launcher.png"
+          magick cardex-logo.png -resize 72x72 "$RES/mipmap-hdpi/ic_launcher.png"
+          magick cardex-logo.png -resize 96x96 "$RES/mipmap-xhdpi/ic_launcher.png"
+          magick cardex-logo.png -resize 144x144 "$RES/mipmap-xxhdpi/ic_launcher.png"
+          magick cardex-logo.png -resize 192x192 "$RES/mipmap-xxxhdpi/ic_launcher.png"
+
+          cp "$RES/mipmap-mdpi/ic_launcher.png" "$RES/mipmap-mdpi/ic_launcher_round.png"
+          cp "$RES/mipmap-hdpi/ic_launcher.png" "$RES/mipmap-hdpi/ic_launcher_round.png"
+          cp "$RES/mipmap-xhdpi/ic_launcher.png" "$RES/mipmap-xhdpi/ic_launcher_round.png"
+          cp "$RES/mipmap-xxhdpi/ic_launcher.png" "$RES/mipmap-xxhdpi/ic_launcher_round.png"
+          cp "$RES/mipmap-xxxhdpi/ic_launcher.png" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
+
+          echo "Iconos de Cardex creados."
+
+      - name: Preparar Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+
+      - name: Generar APK de prueba
+        run: |
+          cd android
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Generar AAB
+        run: |
+          cd android
+          ./gradlew --no-daemon bundleRelease
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardex-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+
+      - name: Guardar AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardex-aab
