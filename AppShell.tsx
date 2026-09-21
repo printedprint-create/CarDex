@@ -36,6 +36,7 @@ export function AppShell({ title = "Cardex", subtitle, children }: Props) {
       <footer className="sticky bottom-0 z-40 border-t border-foreground bg-background">
         <nav className="flex h-16 items-center justify-around">
           <NavItem to="/archivo" label="Archivo" />
+          <NavItem to="/coches" label="Coches" />
           <Link
             to="/capturar"
             aria-label="Capturar coche"
